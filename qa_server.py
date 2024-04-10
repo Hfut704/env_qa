@@ -17,7 +17,7 @@ app = FastAPI()
 # chatbot = ZlChatBot().init_chatbot_from_faiss(
 #     ['vector_storage/hp_dbs/full_info_db', 'vector_storage/hp_dbs/key_info_db'])
 
-chatbot = HB_Chatbot().init_chatbot_from_milvus("ko.zhonghuapu.com", port='5530',
+chatbot = HB_Chatbot().init_chatbot_from_milvus(my_args['milvus_host'], port=my_args['milvus_port'],
                                                 collections=['hb_full_info', 'hb_key_info'])
 
 

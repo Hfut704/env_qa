@@ -8,11 +8,9 @@ class CustomNamespace(argparse.Namespace):
         return getattr(self, key, None)
 
 # 创建 ArgumentParser 对象
-parser = argparse.ArgumentParser(description='Argument Parsing Example')
+parser = argparse.ArgumentParser(description='智能问答项目参数配置！')
 
 # 添加参数
-parser.add_argument('--name', type=str, help='Name of the user', default='18')
-parser.add_argument('--age', type=int, help='Age of the user', default=18)
 parser.add_argument('--config', type=str, help='相对当前文件的配置文件路径', default='config.ini') #
 
 # 解析命令行参数
