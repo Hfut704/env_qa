@@ -1,8 +1,8 @@
 import json
 import os
 
-from langchain_community.embeddings import OpenAIEmbeddings
-
+# from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 os.environ["OPENAI_API_KEY"] = "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"
 # os.environ["OPENAI_API_BASE"] = "https://api.openai-proxy.com/v1" # 配置中转代理，就不需要翻墙了，有风险！
 os.environ["OPENAI_API_BASE"] = "https://openai-proxy-6v0.pages.dev/v1"
@@ -17,7 +17,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 
-
+embedding_model = OpenAIEmbeddings(model='text-embedding-3-large')
 
 def xls2doc(path, header_line, source, core_columns):
     full_info_docs = []
@@ -52,7 +52,7 @@ def init_db(core_info_list, full_info_list):
     # 创建库
     Milvus.from_documents(
         core_info_list,
-        OpenAIEmbeddings(),
+        embedding_model,
         collection_name="hb_key_info",
         connection_args={"host": "ko.zhonghuapu.com", "port": "5530"},
         index_params={
@@ -63,7 +63,7 @@ def init_db(core_info_list, full_info_list):
     )
     Milvus.from_documents(
         full_info_list,
-        OpenAIEmbeddings(),
+        embedding_model,
         collection_name="hb_full_info",
         connection_args={"host": "ko.zhonghuapu.com", "port": "5530"},
         index_params={
@@ -76,7 +76,7 @@ def init_db(core_info_list, full_info_list):
 
 def add_new_to_db(core_info_list, full_info_list):
     full_info_db = Milvus(
-        OpenAIEmbeddings(),
+        embedding_model,
         connection_args={"host": "ko.zhonghuapu.com", "port": "5530"},
         collection_name="hb_full_info",
         auto_id=True
@@ -84,7 +84,7 @@ def add_new_to_db(core_info_list, full_info_list):
 
     full_info_db.add_texts([d.page_content for d in full_info_list], [d.metadata for d in full_info_list])
     key_info_db = Milvus(
-        OpenAIEmbeddings(),
+        embedding_model,
         connection_args={"host": "ko.zhonghuapu.com", "port": "5530"},
         collection_name="hb_key_info",
         auto_id=True

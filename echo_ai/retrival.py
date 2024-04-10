@@ -1,9 +1,6 @@
-import json
+from typing import List
 from langchain import FAISS
-from langchain.schema.document import Document
-from langchain.embeddings.base import Embeddings
-from .embeddings import *
-from langchain.vectorstores.utils import DistanceStrategy, maximal_marginal_relevance
+from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import Milvus
 
 class MyRetrival:
@@ -66,16 +63,5 @@ class MyRetrival:
 
 
 if __name__ == '__main__':
-    import os
 
-    os.environ["OPENAI_API_KEY"] = ""
-    R = MyRetrival()
-    a = AbstractEmbedding()
-    b = KeywordEmbedding()
-    c = TextEmbedding()
-    R.init_from_faiss_dbs(['../vector_storage/zhongliang_abstract', '../vector_storage/zhongliang_keyword',
-                           '../vector_storage/zhongliang_query'],
-                          embeddings=[a, b, c])
-    R.get_relevant_documents('重置密码怎么实现?')
-
-
+    pass

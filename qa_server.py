@@ -6,10 +6,11 @@ from fastapi.responses import StreamingResponse
 import markdown
 from utils import *
 from chatbot import *
+import os
 
-os.environ["OPENAI_API_KEY"] = "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"
-os.environ["OPENAI_API_BASE"] = "https://openai-proxy-6v0.pages.dev/v1"
 
+os.environ["OPENAI_API_BASE"] = my_args['openai_api_base']
+os.environ["OPENAI_API_KEY"] = my_args['openai_api_key']
 app = FastAPI()
 
 # 初始化智能问答机器人
@@ -56,7 +57,7 @@ async def query2kb_stream(req_data: QueryRequest):
         return StreamingResponse(generate_json_stream_result(generate_steam(res)), media_type="application/json")
     else:
         # chatbot.get_stream返回的时字符流， generate_json_stream_result将字符流转换为json数据块流
-        return StreamingResponse(generate_json_stream_result(chatbot.get_stream(req_data)),
+        return StreamingResponse(generate_json_stream_result(chatbot.query2kb_stream(req_data)),
                                  media_type="application/json")
 
 
@@ -70,40 +71,29 @@ async def query2kb(req_data: QueryRequest):
     res = chatbot.get_from_cache(req_data.question)
     if not res:
         res = chatbot.query2kb(req_data)
-        # query = req_data.question
-        # # 检索文本相关的问答对
-        # text_relevant_docs = chatbot.retrival.get_relevant_documents(query=query)
-        #
-        # # 获取得到两种方式相关的问答对后，合并
-        # docs = text_relevant_docs
-        # # 数据后处理
-        # relevant_docs = chatbot.post_progress_data(docs)
-        #
-        # res = "\n\n".join(relevant_docs)#chatbot.query2kb(req_data)
-        # print(res)
     return AnswerResult(response=res)
 
 
 @app.get("/v0/query2kb_stream")
-async def query2kb(q: str):
+async def query2kb_stream_v0(q: str):
     """
         返回流式数据接口
         :param req_data:
         :return:
         """
     query = QueryRequest(question=q)
-    res = chatbot.get_from_cache(query.question)
+    res = None #chatbot.get_from_cache(query.question)
     if res:
         # 如果存在缓存则以流式数据的方式返回数据。
         return StreamingResponse(generate_steam(res), media_type="text/html")
     else:
         # chatbot.get_stream返回的时字符流， generate_json_stream_result将字符流转换为json数据块流
-        return StreamingResponse(chatbot.get_stream(query),
+        return StreamingResponse(chatbot.query2kb_stream(query),
                                  media_type="text/html")
 
 
 @app.get("/v0/query2kb")
-async def query2kb(q: str):
+async def query2kb_v0(q: str):
     """
     直接返回答案
     :param req_data:
@@ -113,10 +103,10 @@ async def query2kb(q: str):
     if not res:
         query = QueryRequest(question=q)
         res = chatbot.query2kb(query)
+
         html_text = markdown.markdown(res)
         response = Response(content=html_text, media_type="text/html")
         return response
-
 
 @app.get("/test")
 async def test():
@@ -128,6 +118,6 @@ async def test():
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='qa_server:app', host="127.0.0.1", port=5500, reload=False)
+    uvicorn.run(app='qa_server:app', host="127.0.0.1", port=5500)
 
 

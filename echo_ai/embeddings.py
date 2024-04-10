@@ -6,7 +6,7 @@ from typing import List, Any
 
 import torch
 import torch.nn.functional as F
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models.openai import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
