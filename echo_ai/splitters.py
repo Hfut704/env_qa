@@ -8,7 +8,7 @@ from langchain.schema import HumanMessage, SystemMessage
 from langchain.text_splitter import TextSplitter
 from langchain.chat_models import ChatOpenAI
 from .output_parsers import MyParser
-
+import re
 def split_with_delimiters(text: str, delimiters: List[str]) -> List[str]:
     """
     按照给出的字符列表对text进行切分，保留切分字符串作为前一个句子的结尾。
@@ -117,6 +117,135 @@ class SemanticsTextSplitter(TextSplitter):
 
     async def atransform_documents(self, documents: Sequence[Document], **kwargs: Any) -> Sequence[Document]:
         pass
+
+
+class ChineseLawSplitter(TextSplitter):
+    def __init__(self, **kwargs: Any):
+        """Create a new TextSplitter."""
+        super().__init__(**kwargs)
+    def split_text(self, text: str) -> List[str]:
+        """
+        对法律法规按照标题，介绍，目录，章，条进行切割
+        :param text:
+        :return:
+        """
+        self.split(text)
+
+    def read_docx(self, file_path):
+        from docx import Document as Documentx
+        # 加载文档
+        doc = Documentx(file_path)
+        full_text = []
+        # 遍历文档中的每个段落，并将其文本内容添加到列表中
+        for para in doc.paragraphs:
+            full_text.append(para.text)
+        # 将列表中的文本内容连接成一个字符串，并返回
+        return '\n'.join(full_text)
+
+
+    def get_intro(self, lines_without_title):
+        intro = ""
+        start = 0
+        for line in lines_without_title:
+            if re.match(r"^目录", line):
+                break
+            if re.match(r"^第.*章", line):
+                break
+            if re.match(r"^第.*条", line):
+                break
+            intro+=line+'\n'
+            start += 1
+        return intro, lines_without_title[start:]
+
+    def get_chapters(self, lines):
+        chapters = []
+        chapter = {}
+        content = ""
+        title = ""
+        for line in lines:
+            if re.match(r"^第.*?章", line):
+                chapter = {}
+                chapter['title'] = title
+                chapter['content'] = content
+                chapters.append(chapter)
+                title = line
+                content = ""
+            else:
+                content += line+'\n'
+
+        chapter = {}
+        chapter['title'] = title
+        chapter['content'] = content
+        chapters.append(chapter)
+        del chapters[0]
+        return chapters
+
+    def get_catalog(self, lines):
+        catalog = ""
+        start = 0
+        n = 0
+        for line in lines:
+            if re.match(r"^第一章", line):
+                if n > 0:
+                    break
+                n += 1
+            if re.match(r"^第.*条", line):
+                break
+            catalog += line+'\n'
+            start += 1
+        if n < 2:
+            return "", lines
+        return catalog, lines[start:]
+
+    def get_article(self, lines):
+        articles = []
+        content = ""
+        for line in lines:
+            if re.match(r"^第.*条", line):
+                articles.append(content)
+                content=''
+            content += line+'\n'
+        articles = [l for l in articles if l != '']
+        return  articles
+
+
+    def preprocess(self, doc_text):
+        lines = doc_text.split('\n')
+        temp = []
+        for line in lines:
+            line = re.sub(r'\s+', '', line)
+            line = re.sub(r'(第.*?章)', r'\1 ', line)
+            line = re.sub(r'(第.*?条)', r'\1 ', line)
+            if line != "":
+                temp.append(line)
+        lines = temp
+        return lines
+
+    def get_title(self, lines):
+        return lines[0], lines[1:]
+
+    def split(self, file_path):
+        # 读取文件并打印内容
+        doc = {}
+        doc_text = self.read_docx(file_path)
+        lines = self.preprocess(doc_text)
+        title, lines = self.get_title(lines)
+        intro, content_lines = self.get_intro(lines)
+        catalog, content_lines = self.get_catalog(content_lines)
+        doc['title'] = title
+        doc['intro'] = intro
+        doc['catalog'] = catalog
+        chapters = self.get_chapters(content_lines)
+        if len(chapters) == 0:
+            articles = self.get_article(content_lines)
+            doc['articles'] = articles
+        else:
+            for chapter in chapters:
+                lines = chapter['content'].split('\n')
+                articles = self.get_article(lines)
+                chapter['articles'] = articles
+            doc['chapters'] = chapters
+        return doc
 
 
 if __name__ == '__main__':

@@ -15,9 +15,16 @@ import json
 
 import pandas as pd
 from bs4 import BeautifulSoup
-
+from langchain_community.document_loaders import PyPDFLoader
 
 embedding_model = OpenAIEmbeddings(model='text-embedding-3-large')
+
+
+
+def embedding_doc():
+    loader = PyPDFLoader("example_data/layout-parser-paper.pdf")
+    pages = loader.load_and_split()
+
 
 def xls2doc(path, header_line, source, core_columns):
     full_info_docs = []
@@ -90,6 +97,11 @@ def add_new_to_db(core_info_list, full_info_list):
         auto_id=True
     )
     key_info_db.add_texts([d.page_content for d in core_info_list], [d.metadata for d in core_info_list])
+
+
+
+
+
 
 
 # # 读取 Excel 文件
