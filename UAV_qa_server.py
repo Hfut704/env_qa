@@ -5,7 +5,7 @@ from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
 import markdown
 from utils import *
-from chatbot import *
+from UAV_chatbot import *
 import os
 
 
@@ -17,7 +17,7 @@ app = FastAPI()
 # chatbot = ZlChatBot().init_chatbot_from_faiss(
 #     ['vector_storage/hp_dbs/full_info_db', 'vector_storage/hp_dbs/key_info_db'])
 
-chatbot = HB_Chatbot().init_chatbot_from_milvus(my_args['milvus_host'], port=my_args['milvus_port'],
+chatbot = UAV_Chatbot().init_chatbot_from_milvus(my_args['milvus_host'], port=my_args['milvus_port'],
                                                 collections=['UAV_db'])
 
 
@@ -118,6 +118,4 @@ async def test():
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='qa_server:app', host="127.0.0.1", port=5550)
-
-
+    uvicorn.run( app=app, host="127.0.0.1", port=5550)
