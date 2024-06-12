@@ -21,6 +21,7 @@ class MessageType(Enum):
 
 class QueryRequest(BaseModel):
     question: str = Field(default="你好！")
+    llm: str = 'gpt'
     img_base64: str = None
     stream: bool = False
 

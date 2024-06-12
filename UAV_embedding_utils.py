@@ -12,7 +12,7 @@ embedding_model = OpenAIEmbeddings(model='text-embedding-3-large')
 
 
 # 指定要遍历的目录
-directory = "E:/desktop/无人机项目/"
+directory = "E:\desktop\无人机项目\\优先"
 
 
 contents = []
@@ -28,17 +28,31 @@ for filename in os.listdir(directory):
         for page_num, page_content in enumerate(pages, start=1):
             contents.append(page_content)
 
-contents
 
-Milvus.from_documents(
-        contents,
+for d in contents:
+    d.page_content = d.page_content.replace('\n','').replace(' ', '')
+
+
+
+db = Milvus(
         embedding_model,
-        collection_name="UAV_db",
         connection_args={"host": "ko.zhonghuapu.com", "port": "5530"},
-        index_params={
-            'metric_type': 'COSINE',
-            'index_type': "IVF_FLAT",
-            'params': {"nlist": 256}
-        },
+        collection_name="UAV_db",
+        auto_id=True
     )
+
+db.add_documents(contents)
+
+db
+# Milvus.from_documents(
+#         contents,
+#         embedding_model,
+#         collection_name="UAV_db",
+#         connection_args={"host": "ko.zhonghuapu.com", "port": "5530"},
+#         index_params={
+#             'metric_type': 'COSINE',
+#             'index_type': "IVF_FLAT",
+#             'params': {"nlist": 256}
+#         },
+#     )
 print("已经完成!")

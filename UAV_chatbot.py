@@ -6,6 +6,8 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from echo_ai.retrival import MyRetrival
 import tiktoken
 from utils import *
+
+
 class UAV_Chatbot:
     """
     一个基于知识库的问答机器人的核心步骤包括：
@@ -17,17 +19,25 @@ class UAV_Chatbot:
     def __init__(self):
         self.retrival = MyRetrival()  # 检索器，从单个获取多个知识库中检索相关的文本
         self.llm_name = my_args['openai_model'] if my_args['openai_model'] else 'gpt-3.5-turbo'
-        self.llm = ChatOpenAI(
-            model=self.llm_name,
-            temperature=0,
-        )  ## temperature越低回答越准确，越高创造性越强
+        self.llms = {
+            'gpt': ChatOpenAI(
+                model=self.llm_name,
+                temperature=0,
+            ),
+            'glm': ChatOpenAI(
+            temperature=0.95,
+            model="glm-4",
+            openai_api_key="2e27c911af6ddf158ae8990db4495ace.zWkf60hGjGzNAYEK",
+            openai_api_base="https://open.bigmodel.cn/api/paas/v4/"
+        )
+        }
         self.stream_llm = None
         self.cache = {}
         # self.xf_llm = SparkLLM(temperature=0.1, version=3.1)
-        self.token_encoder = tiktoken.encoding_for_model(my_args['openai_model'])
+        self.token_encoder = tiktoken.encoding_for_model(my_args['encoding_for_model'])
         self.max_token = int(my_args['max_token']) if my_args['max_token'] and my_args['max_token'].isdigit() else 4096
 
-    def init_chatbot_from_milvus(self , host, port, collections: List[str]):
+    def init_chatbot_from_milvus(self, host, port, collections: List[str]):
         """
         从milvus中初始化chatbot
         @param host:
@@ -67,7 +77,7 @@ class UAV_Chatbot:
         :return:
         """
         docs = [d for ds in docs_list for d in ds]
-        docs = sorted(docs, key=lambda x: x[1],reverse=True)
+        docs = sorted(docs, key=lambda x: x[1], reverse=True)
         res = set()
         for doc in docs:
             item = json.loads(doc[0].metadata['data'])
@@ -78,7 +88,6 @@ class UAV_Chatbot:
             res.add(full_info)
         return list(res)
 
-
     def query2kb(self, query_data: QueryRequest):
         """
         从本地知识库中检索相关知识并回答问题
@@ -88,7 +97,8 @@ class UAV_Chatbot:
         """
         query = query_data.question
         prompt, content = self.prepare_prompt(query)
-        ans = self.llm.invoke(prompt).content
+        llm = query_data.llm
+        ans = self.llms[llm].invoke(prompt).content
         self.cache[hash(query)] = ans
         content.replace('\n', '\n >')
         ans += f"<br><br><br><br><br><br><br><br><br><br><br><br><br><br> <br><br><br><br><br><br><br>  <h>参考信息</h> <br> \n{content}\n"
@@ -103,7 +113,8 @@ class UAV_Chatbot:
         """
         query = query_data.question
         prompt, content = self.prepare_prompt(query)
-        ans = self.llm.invoke(prompt).content
+        llm = query_data.llm
+        ans = self.llms[llm].invoke(prompt).content
         for chunk in ans:
             yield chunk
 
@@ -112,7 +123,7 @@ class UAV_Chatbot:
         text_relevant_docs = self.retrival.get_relevant_documents(query=query)
 
         # 数据后处理
-        relevant_docs =  [d[0].page_content for ds in text_relevant_docs for d in ds ]
+        relevant_docs = [d[0].page_content for ds in text_relevant_docs for d in ds]
         content = ""
         content_token_len = 0
         for d in relevant_docs:
@@ -135,5 +146,3 @@ QUERY:
 {query}
 """
         return prompt, content
-
-

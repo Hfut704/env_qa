@@ -1,7 +1,7 @@
 import os
 
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response,Query
 from fastapi.responses import StreamingResponse
 import markdown
 from utils import *
@@ -75,14 +75,14 @@ async def query2kb(req_data: QueryRequest):
 
 
 @app.get("/v0/query2kb_stream")
-async def query2kb_stream_v0(q: str):
+async def query2kb_stream_v0(q: str, llm: str = Query("gpt")):
     """
         返回流式数据接口
         :param req_data:
         :return:
         """
-    query = QueryRequest(question=q)
-    res = None #chatbot.get_from_cache(query.question)
+    query = QueryRequest(question=q, llm=llm)
+    res = "" #chatbot.get_from_cache(query.question)
     if res:
         # 如果存在缓存则以流式数据的方式返回数据。
         return StreamingResponse(generate_steam(res), media_type="text/html")
@@ -93,7 +93,7 @@ async def query2kb_stream_v0(q: str):
 
 
 @app.get("/v0/query2kb")
-async def query2kb_v0(q: str):
+async def query2kb_v0(q: str,llm: str = Query("gpt")):
     """
     直接返回答案
     :param req_data:
@@ -101,7 +101,7 @@ async def query2kb_v0(q: str):
     """
     res = None  # chatbot.get_from_cache(q)
     if not res:
-        query = QueryRequest(question=q)
+        query = QueryRequest(question=q, llm=llm)
         res = chatbot.query2kb(query)
 
         html_text = markdown.markdown(res)
