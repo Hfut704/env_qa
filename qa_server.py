@@ -61,7 +61,7 @@ async def query2kb_stream(req_data: QueryRequest):
                                  media_type="application/json")
 
 
-@app.route("/v1/query2kb", methods=['GET', 'POST'])
+@app.post("/v1/query2kb")
 async def query2kb(req_data: QueryRequest):
     """
     直接返回答案
@@ -70,8 +70,10 @@ async def query2kb(req_data: QueryRequest):
     """
     res = chatbot.get_from_cache(req_data.question)
     if not res:
-        res = chatbot.query2kb(req_data)
-    return AnswerResult(response=res)
+        ans, context = chatbot.query2kb(req_data)
+        res = dict(AnswerResult(response=ans))
+        res['context'] = context
+    return res
 
 
 @app.get("/v0/query2kb_stream")
@@ -102,8 +104,9 @@ async def query2kb_v0(q: str):
     res = None  # chatbot.get_from_cache(q)
     if not res:
         query = QueryRequest(question=q)
-        res = chatbot.query2kb(query)
-
+        # res = chatbot.query2kb(query)
+        res, content = chatbot.query2kb(query)
+        res = res + f"<br><br><br><br><br><br><br><br><br><br><br><br><br><br> <br><br><br><br><br><br><br>  <h>参考信息</h> <br> \n{content}\n"
         html_text = markdown.markdown(res)
         response = Response(content=html_text, media_type="text/html")
         return response

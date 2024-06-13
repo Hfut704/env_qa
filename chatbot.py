@@ -24,7 +24,7 @@ class HB_Chatbot:
         self.stream_llm = None
         self.cache = {}
         # self.xf_llm = SparkLLM(temperature=0.1, version=3.1)
-        self.token_encoder = tiktoken.encoding_for_model(my_args['openai_model'])
+        self.token_encoder = tiktoken.encoding_for_model(my_args['encoding_for_model'])
         self.max_token = int(my_args['max_token']) if my_args['max_token'] and my_args['max_token'].isdigit() else 4096
 
     def init_chatbot_from_milvus(self , host, port, collections: List[str]):
@@ -91,8 +91,7 @@ class HB_Chatbot:
         ans = self.llm.invoke(prompt).content
         self.cache[hash(query)] = ans
         content.replace('\n', '\n >')
-        ans += f"<br><br><br><br><br><br><br><br><br><br><br><br><br><br> <br><br><br><br><br><br><br>  <h>参考信息</h> <br> \n{content}\n"
-        return ans
+        return ans, content
 
     def query2kb_stream(self, query_data: QueryRequest):
         """
