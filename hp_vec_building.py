@@ -20,10 +20,7 @@ from langchain_community.document_loaders import PyPDFLoader
 embedding_model = OpenAIEmbeddings(model='text-embedding-3-large')
 
 
-
-def embedding_doc():
-    loader = PyPDFLoader("example_data/layout-parser-paper.pdf")
-    pages = loader.load_and_split()
+embedding_model.embed_query('')
 
 
 def xls2doc(path, header_line, source, core_columns):
@@ -109,13 +106,13 @@ def add_new_to_db(core_info_list, full_info_list):
 # df_1 = pd.read_excel('E:\desktop\环保项目\知识管理_数据.xlsx', header=1)
 # df_2 = pd.read_excel('E:\desktop\环保项目\法规管理_数据.xlsx', header=1)
 
-full_info_list, core_info_list = xls2doc('E:\desktop\环保项目\知识管理_数据.xlsx', header_line=1, source='知识管理', core_columns=['法规名称', '知识名称', '合规类别标签', '合规对象标签', '规定要求'])
+full_info_list, core_info_list = xls2doc('E:\desktop\卜老师项目\环保项目\知识管理_数据.xlsx', header_line=1, source='知识管理', core_columns=['法规名称', '知识名称', '合规类别标签', '合规对象标签', '规定要求'])
 init_db(core_info_list , full_info_list)
 
-full_info_list, core_info_list = xls2doc('E:\desktop\环保项目\合规条款总库_数据.xlsx', header_line=1, source='合规条款总库', core_columns=['法规名称', '知识名称', '合规类别标签', '合规对象标签', '规定要求'])
+full_info_list, core_info_list = xls2doc('E:\desktop\卜老师项目\环保项目\合规条款总库_数据.xlsx', header_line=1, source='合规条款总库', core_columns=['法规名称', '知识名称', '合规类别标签', '合规对象标签', '规定要求'])
 add_new_to_db(core_info_list , full_info_list)
 
-full_info_list, core_info_list = xls2doc('E:\desktop\环保项目\法规管理_数据.xlsx', header_line=1, source='法规管理', core_columns=['法规名称', '知识名称', '合规类别标签', '合规对象标签', '规定要求'])
+full_info_list, core_info_list = xls2doc('E:\desktop\卜老师项目\环保项目\法规管理_数据.xlsx', header_line=1, source='法规管理', core_columns=['法规名称', '知识名称', '合规类别标签', '合规对象标签', '规定要求'])
 add_new_to_db(core_info_list , full_info_list)
 
 

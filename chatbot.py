@@ -19,7 +19,7 @@ class HB_Chatbot:
         self.llm_name = my_args['openai_model'] if my_args['openai_model'] else 'gpt-3.5-turbo'
         self.llm = ChatOpenAI(
             model=self.llm_name,
-            temperature=0,
+            temperature=0.3,
         )  ## temperature越低回答越准确，越高创造性越强
         self.stream_llm = None
         self.cache = {}
@@ -122,16 +122,23 @@ class HB_Chatbot:
         prompt = f"""
 
 KNOWLEDGE:
-<knowledge>\n{content}\n</knowledge>
+<KNOWLEDGE>\n{content}\n</KNOWLEDGE>
 
 
 请根据"KNOWLEDGE"中的信息回答问题。
-您需要仔细考虑您的答案，并确保它基于上下文，如果能够给出依据，则在回答中给出你得出答案的依据。
-如果根据"KNOWLEDGE"无法得到答案，则回答“根据知识库的内容暂时无法得到准确答案。”
-请不要回答从"KNOWLEDGE"无法推断出的内容。
-必须使用{"Chinese"}进行回应。 
+请按照<EXAMPLES>中的文本格式进行回答。
+
+<EXAMPLES>
+QUERY:
+骑电瓶车应该行驶在哪条道路上？
+OUTPUT:
+电瓶车为非机动车，应当在非机动车道内行驶, 在没有非机动车道的道路上，应当靠车行道的右侧行驶。\n
+依据： 《中华人民共和国道路交通安全法》第五十七条；
+<\EXAMPLES>
+
 QUERY:
 {query}
+OUTPUT:
 """
         return prompt, content
 
