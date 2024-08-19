@@ -108,7 +108,7 @@ async def query2kb_v0(q: str,llm: str = Query("gpt")):
         response = Response(content=html_text, media_type="text/html")
         return response
 
-@app.get("/test")
+@app.get("../test")
 async def test():
     """
     测试接口
